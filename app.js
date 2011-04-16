@@ -9,8 +9,9 @@ $(function() {
       if(Application.cached_template) {
         return Application.cached_template;
       } else {
+        path = location.pathname
         Application.cached_template = $.ajax({
-          url: "_template.html",
+          url: path.substring(0, path.lastIndexOf('/')) + "/_template.html",
           async: false
         }).responseText;
         return Application.cached_template;
