@@ -1,0 +1,38 @@
+html {
+  overflow: -moz-scrollbars-vertical;
+  overflow-y: scroll;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.hidden {
+  display: none;
+}
+
+.search_hidden {
+  display: none;
+}
+
+.search_shown {
+  display: block;
+}
+
+#main {
+  width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+#search {
+  font-size: 18pt;
+}
+
+#search input {
+  font-size: 14pt;
+}
+
+a {
+  color: blue;
+}
