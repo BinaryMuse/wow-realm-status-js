@@ -93,8 +93,8 @@ $(function() {
           hours -= 12;
         }
         if(hours == 0) {
-          hours == 12;
-          meridian == "AM"
+          hours = 12;
+          meridian = "AM"
         }
         if(minutes < 10) {
           minutes = "0" + minutes;
