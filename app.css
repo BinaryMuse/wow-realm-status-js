@@ -7,6 +7,13 @@ body {
   font-family: Arial, sans-serif;
 }
 
+img#forkme {
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  border: none;
+}
+
 .hidden {
   display: none;
 }
