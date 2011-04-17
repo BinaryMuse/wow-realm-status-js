@@ -1,4 +1,14 @@
 $ ->
+  String::startsWith = (other, case_cmp = false) ->
+    first  = this
+    second = other || ""
+
+    unless case_cmp
+      first  = first.toUpperCase()
+      second = second.toUpperCase()
+
+    first.indexOf(second) == 0
+
   # Some text helpers
   window.TextHelpers =
     type: (type) ->
