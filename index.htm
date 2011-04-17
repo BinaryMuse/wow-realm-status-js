@@ -11,24 +11,24 @@
   <a href="https://github.com/BinaryMuse/wow-realm-status-js">
     <img id="forkme" src="images/forkme.png" />
   </a>
+
   <div id="main">
     <p id="search">
       Search:
       <input type="text" size="30" id="realm-searcher" />
+      <span id="loading">
+        <img src="images/loading.gif" alt="loading" />
+      </span>
     </p>
 
     <p id="time">
-      Last  Updated: <span>never</span><br />
+      Last Updated: <span>never</span><br />
       <em>Data updates every five minutes</em>
     </p>
-
-    <div id="loading">
-      <img src="images/loading.gif" alt="loading" /> Reloading data...
-    </div>
   </div>
 
-  <div id="realm_template", class="realm" style="display: none;" data-slug="{{ slug }}">
-    <h1><a href="#{{slug}}">{{ name }}</a> ({{ TextHelpers.type(type) }})</h1>
+  <div id="realm_template", style="display: none;">
+    <h1><a href="#{{ slug }}">{{ name }}</a> ({{ TextHelpers.type(type) }})</h1>
 
     <p>
       Status: {{ TextHelpers.status(status) }}<br />
@@ -36,6 +36,5 @@
       Queue: {{ TextHelpers.queue(queue) }}
     </p>
   </div>
-
 </body>
 </html>

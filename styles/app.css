@@ -43,3 +43,8 @@ img#forkme {
 a {
   color: blue;
 }
+
+#loading {
+  display: inline-block;
+  width: 16px;
+}
