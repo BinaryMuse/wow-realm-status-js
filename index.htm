@@ -27,8 +27,8 @@
     </div>
   </div>
 
-  <div id="realm_template", class="realm" style="display: none;">
-    <h1><a href="#">{{ name }}</a> ({{ TextHelpers.type(type) }})</h1>
+  <div id="realm_template", class="realm" style="display: none;" data-slug="{{ slug }}">
+    <h1><a href="#{{slug}}">{{ name }}</a> ({{ TextHelpers.type(type) }})</h1>
 
     <p>
       Status: {{ TextHelpers.status(status) }}<br />
