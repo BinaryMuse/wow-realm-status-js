@@ -1,172 +1,152 @@
-$(function() {
-  // Application and helpers
-  var Application = {
-    cached_template: null,
-
-    // Get our template for a realm block from _template.html.
-    // Cache this so we only need to fetch it once.
-    template: function() {
-      if(Application.cached_template) {
-        return Application.cached_template;
-      } else {
-        path = location.pathname
-        Application.cached_template = $.ajax({
-          url: path.substring(0, path.lastIndexOf('/')) + "/_template.html",
-          async: false
-        }).responseText;
-        return Application.cached_template;
+(function() {
+  $(function() {
+    window.TextHelpers = {
+      type: function(type) {
+        switch (type) {
+          case "pve":
+            return "PvE";
+          case "pvp":
+            return "PvP";
+          case "rp":
+            return "RP";
+          case "rppvp":
+            return "RP PvP";
+          default:
+            return type;
+        }
+      },
+      population: function(pop) {
+        switch (pop) {
+          case "low":
+            return "Low";
+          case "medium":
+            return "Medium";
+          case "high":
+            return "High";
+          default:
+            return pop;
+        }
+      },
+      status: function(status) {
+        if (status) {
+          return "Up";
+        } else {
+          return "Down";
+        }
+      },
+      queue: function(queue) {
+        if (queue) {
+          return "Yes";
+        } else {
+          return "No";
+        }
       }
-    },
-
-    // Create or update the realm list from the API.
-    update_realms: function() {
-      $("#loading").show();
-
-      $.getJSON("http://us.battle.net/api/wow/realm/status?jsonp=?", {cache: false}, function(data) {
-        $.each(data.realms, function(i, realm) {
-          realm.type = Application.TemplateHelpers.proper_realm_type(realm.type);
-          realm.status = realm.status ? "Up" : "Down";
-          realm.population = Application.TemplateHelpers.proper_realm_population(realm.population);
-          realm.queue = realm.queue ? "Yes" : "No";
-          var view = Milk.render(Application.template(), realm);
-
-          realm_el_id = "#realm-" + realm.slug;
-
-          if($("#main " + realm_el_id).length > 0) {
-            console.log("Replacing");
-            $("#main " + realm_el_id).html(view);
-          } else {
-            console.log("Adding");
-            $("#main").append($(view));
-          }
+    };
+    _.templateSettings = {
+      interpolate: /\{\{(.+?)\}\}/g
+    };
+    window.Realm = Backbone.Model.extend({
+      initialize: function() {
+        if (!this.get("name")) {
+          return this.set({
+            name: "unknown",
+            slug: "unknown",
+            type: "n/a",
+            population: "n/a",
+            queue: false,
+            status: false
+          });
+        }
+      }
+    });
+    window.RealmList = Backbone.Collection.extend({
+      model: Realm,
+      url: "http://us.battle.net/api/wow/realm/status?jsonp=?",
+      initialize: function() {
+        return _.bindAll(this, 'parse', 'update');
+      },
+      update: function() {
+        this.trigger('refresh:start');
+        return this.fetch();
+      },
+      parse: function(response) {
+        window.setTimeout(this.update, 1000 * 60 * 5);
+        this.trigger('refresh:end');
+        return response.realms;
+      }
+    });
+    window.Realms = new RealmList;
+    window.RealmView = Backbone.View.extend({
+      tagName: "div",
+      template: _.template($("#realm_template").html()),
+      events: {
+        "click a": "filterRealm"
+      },
+      initialize: function() {
+        _.bindAll(this, 'render');
+        this.model.bind('change', this.render);
+        return this.model.view = this;
+      },
+      render: function() {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+      },
+      filterRealm: function() {}
+    });
+    window.AppView = Backbone.View.extend({
+      el: $("#main"),
+      initialize: function() {
+        _.bindAll(this, 'render', 'addOne', 'addAll', 'update_time', 'start_loading', 'stop_loading');
+        Realms.bind('add', this.addOne);
+        Realms.bind('refresh', this.addAll);
+        Realms.bind('refresh:start', this.update_time);
+        Realms.bind('refresh:start', this.start_loading);
+        Realms.bind('refresh:end', this.stop_loading);
+        return Realms.update();
+      },
+      addOne: function(realm) {
+        var view;
+        view = new RealmView({
+          model: realm
         });
-
-        $("#loading").hide();
-        $("#time span").html(Application.TemplateHelpers.get_time());
-
-        window.setTimeout(Application.update_realms, 1000 * 60 * 5); // reload every 5 minutes
-
-        // now that the data is loaded (potentiall for the first time),
-        // check to see if there is a hash in the URL we should use to search
-        Searcher.search_by_hash();
-      });
-    },
-
-    // Some helpers to modify strings, etc.
-    TemplateHelpers: {
-      proper_realm_type: function(type) {
-        switch(type) {
-        case "pve":
-          return "PvE";
-        case "pvp":
-          return "PvP";
-        case "rp":
-          return "RP";
-        case "rppvp":
-          return "RP PvP";
-        default:
-          return type;
-        }
+        return this.el.append(view.render().el);
       },
-
-      proper_realm_population: function(population) {
-        switch(population) {
-        case "low":
-          return "Low";
-        case "medium":
-          return "Medium";
-        case "high":
-          return "High";
-        default:
-          return population;
-        }
+      addAll: function() {
+        var view;
+        view = this;
+        return _.each(Realms.models, function(data) {
+          return view.addOne(data);
+        });
       },
-
-      // Get a 12-hour string representation of the current time.
-      get_time: function() {
-        var now = new Date();
-
-        var hours    = now.getHours();
-        var minutes  = now.getMinutes();
-        var meridian = hours < 12 ? "AM" : "PM"
-        if(hours > 12) {
+      render: function() {},
+      start_loading: function() {
+        return this.$("#loading").show();
+      },
+      stop_loading: function() {
+        return this.$("#loading").hide();
+      },
+      update_time: function() {
+        var hours, meridian, minutes, now, seconds;
+        now = new Date;
+        hours = now.getHours();
+        minutes = now.getMinutes();
+        seconds = now.getSeconds();
+        meridian = hours < 12 ? "AM" : "PM";
+        if (hours > 12) {
           hours -= 12;
         }
-        if(hours == 0) {
+        if (hours === 0) {
           hours = 12;
-          meridian = "AM"
         }
-        if(minutes < 10) {
+        if (minutes < 10) {
           minutes = "0" + minutes;
         }
-
-        return hours + ":" + minutes + " " + meridian;
-      }
-    }
-  }
-
-  // Search bar and URL hash
-  var Searcher = {
-    do_search: function(value) {
-      search = value;
-      window.location.hash = value;
-      if(search == "") {
-        return Searcher.show_all();
-      }
-
-      $(".realm").each(function(index, element) {
-        realm_name = $(this).data("name");
-        if(realm_name.startsWith(search)) {
-          $(this).addClass('search_shown');
-          $(this).removeClass('search_hidden');
-        } else {
-          $(this).addClass('search_hidden');
-          $(this).removeClass('search_shown');
+        if (seconds < 10) {
+          seconds = "0" + seconds;
         }
-      });
-    },
-
-    show_all: function() {
-      $(".realm").removeClass('search_hidden');
-      $(".realm").removeClass('search_shown');
-    },
-
-    search_by_hash: function() {
-      if(hash = window.location.hash) {
-        hash = hash.substring(1);
-        $("#search input").val(hash);
-        Searcher.do_search(hash);
+        return this.$("#time span").text("" + hours + ":" + minutes + ":" + seconds + " " + meridian);
       }
-    }
-  }
-
-  // Method to determine if a string starts with a another string.
-  // Optional case sensitivity defaults to false.
-  String.prototype.startsWith = function(other, case_cmp) {
-    var first  = this;
-    var second = other;
-
-    if(!case_cmp) {
-      first  = first.toLowerCase();
-      second = second.toLowerCase();
-    }
-
-    return (first.indexOf(second) === 0);
-  }
-
-  $("#search input").focus();
-
-  $("#realm-searcher").bind("keyup", function() {
-    Searcher.do_search($(this).val());
+    });
+    return window.App = new AppView;
   });
-
-  $(".realm a").live("click", function(event) {
-    event.preventDefault();
-    realm = $(this).closest(".realm").data("name");
-    $("#search input").val(realm);
-    window.location.hash = realm;
-    Searcher.do_search(realm);
-  });
-
-  Application.update_realms();
-});
+}).call(this);
