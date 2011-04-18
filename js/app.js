@@ -174,6 +174,12 @@
         return this.$("input").focus();
       },
       filter: function(term) {
+        this.$("input").val(term);
+        if (term === "") {
+          this.$("#reset").hide();
+        } else {
+          this.$("#reset").show();
+        }
         return Realms.each(function(realm) {
           if (realm.get('name').startsWith(term)) {
             return realm.view.show();

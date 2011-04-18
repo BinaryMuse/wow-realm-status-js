@@ -175,6 +175,11 @@ $ ->
     # Called when the realm list's filter:change event is triggered.
     # Iterates over the realms to see if each matches the search value.
     filter: (term) ->
+      this.$("input").val(term)
+      if term == ""
+        this.$("#reset").hide()
+      else
+        this.$("#reset").show()
       Realms.each (realm) ->
         if realm.get('name').startsWith(term)
           realm.view.show()
