@@ -72,7 +72,7 @@ $ ->
       _.bindAll this, 'update', 'parse', 'processUpdate', 'filter'
       # After the first refresh, we no longer want to replace the models
       # in the collection with new ones. Thus, we will use our own 'refresh'
-      # method which simplu updates all the models with the new data.
+      # method which simply updates all the models with the new data.
       this.bind 'refresh', ->
         this.refresh = this.processUpdate
 
